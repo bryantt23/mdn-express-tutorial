@@ -16,16 +16,15 @@ AuthorSchema.virtual('name').get(function () {
 
 // Virtual for author's lifespan
 AuthorSchema.virtual('lifespan').get(function () {
-  let birth;
-  if (this.date_of_birth === undefined) {
+  if (!this.date_of_birth) {
     return 'Unknown lifespan';
-  } else {
-    birth = this.date_of_birth.getFullYear();
   }
-  const death =
-    this.date_of_death === undefined
-      ? new Date().getFullYear()
-      : this.date_of_death.getFullYear();
+
+  const birth = this.date_of_birth.getFullYear();
+
+  const death = !this.date_of_death
+    ? new Date().getFullYear()
+    : this.date_of_death.getFullYear();
 
   return death - birth + '';
 });
