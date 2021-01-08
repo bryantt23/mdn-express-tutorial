@@ -14,19 +14,27 @@ AuthorSchema.virtual('name').get(function () {
   return this.family_name + ', ' + this.first_name;
 });
 
+// https://www.w3resource.com/javascript-exercises/javascript-date-exercise-18.php
+function calculate_age(dob, death) {
+  var diff_ms = death - dob.getTime();
+  var age_dt = new Date(diff_ms);
+
+  return Math.abs(age_dt.getUTCFullYear() - 1970);
+}
+
 // Virtual for author's lifespan
 AuthorSchema.virtual('lifespan').get(function () {
   if (!this.date_of_birth) {
     return 'Unknown lifespan';
   }
 
-  const birth = this.date_of_birth.getFullYear();
+  const birth = this.date_of_birth;
 
-  const death = !this.date_of_death
-    ? new Date().getFullYear()
-    : this.date_of_death.getFullYear();
+  const death = !this.date_of_death ? new Date() : this.date_of_death;
 
-  return death - birth + '';
+  const age = calculate_age(birth, death);
+
+  return age;
 });
 
 // Virtual for author's URL
