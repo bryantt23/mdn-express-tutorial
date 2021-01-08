@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+const { DateTime } = require('luxon');
 
 var Schema = mongoose.Schema;
 
@@ -16,9 +17,9 @@ AuthorSchema.virtual('name').get(function () {
 
 // Virtual for author's lifespan
 AuthorSchema.virtual('lifespan').get(function () {
-  return (
+  return DateTime.fromJSDate(
     this.date_of_death.getYear() - this.date_of_birth.getYear()
-  ).toString();
+  ).toLocaleString(DateTime.DATE_MED);
 });
 
 // Virtual for author's URL
