@@ -1,5 +1,6 @@
 var BookInstance = require('../models/bookinstance');
 var Book = require('../models/book');
+var async = require('async');
 
 const { body, validationResult } = require('express-validator');
 
@@ -18,10 +19,27 @@ exports.bookinstance_list = function (req, res, next) {
       });
     });
 };
-
+// https://github.com/coriqu/express-locallibrary/blob/12f468980d71f3dd61f57df11aa862faafcc8d87/controllers/bookinstanceController.js
 // Display detail page for a specific BookInstance.
 exports.bookinstance_detail = function (req, res) {
-  res.send('NOT IMPLEMENTED: BookInstance detail: ' + req.params.id);
+  BookInstance.findById(req.params.id)
+    .populate('book')
+    .exec(function (err, bookinstance) {
+      if (err) {
+        return next(err);
+      }
+      if (bookinstance == null) {
+        // No results.
+        var err = new Error('Book copy not found');
+        err.status = 404;
+        return next(err);
+      }
+      // Successful, so render.
+      res.render('bookinstance_detail', {
+        title: 'Copy: ' + bookinstance.book.title,
+        bookinstance: bookinstance
+      });
+    });
 };
 
 // Display BookInstance create form on GET.
@@ -95,13 +113,66 @@ exports.bookinstance_create_post = [
 ];
 
 // Display BookInstance delete form on GET.
-exports.bookinstance_delete_get = function (req, res) {
-  res.send('NOT IMPLEMENTED: BookInstance delete GET');
+exports.bookinstance_delete_get = function (req, res, next) {
+  async.parallel(
+    {
+      bookInstance: function (callback) {
+        BookInstance.findById(req.params.id).exec(callback);
+      }
+    },
+    function (err, results) {
+      if (err) {
+        return next(err);
+      }
+      if (results.bookInstance == null) {
+        // No results.
+        res.redirect('/catalog/bookInstances');
+      }
+      // Successful, so render.
+      res.render('bookInstance_delete', {
+        title: 'Delete Book Insance',
+        bookinstance: results.bookInstance
+      });
+    }
+  );
 };
 
 // Handle BookInstance delete on POST.
-exports.bookinstance_delete_post = function (req, res) {
-  res.send('NOT IMPLEMENTED: BookInstance delete POST');
+exports.bookinstance_delete_post = function (req, res, next) {
+  async.parallel(
+    {
+      bookInstance: function (callback) {
+        BookInstance.findById(req.body.bookinstanceid).exec(callback);
+      }
+    },
+    function (err, results) {
+      if (err) {
+        return next(err);
+      }
+      // Success
+      if (results.bookInstance.length > 0) {
+        // Author has books. Render in same way as for GET route.
+
+        res.render('bookinstance_delete', {
+          title: 'Delete Book Insance',
+          bookInstance: results.bookInstance
+        });
+        return;
+      } else {
+        // Author has no books. Delete object and redirect to the list of authors.
+        BookInstance.findByIdAndRemove(
+          req.body.bookinstance,
+          function deleteAuthor(err) {
+            if (err) {
+              return next(err);
+            }
+            // Success - go to author list
+            res.redirect('/catalog/bookinstances');
+          }
+        );
+      }
+    }
+  );
 };
 
 // Display BookInstance update form on GET.
