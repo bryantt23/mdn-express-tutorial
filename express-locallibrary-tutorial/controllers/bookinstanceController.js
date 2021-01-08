@@ -131,6 +131,7 @@ exports.bookinstance_delete_get = function (req, res, next) {
       // Successful, so render.
       res.render('bookInstance_delete', {
         title: 'Delete Book Insance',
+        //needs to match what's shown on view
         bookinstance: results.bookInstance
       });
     }
@@ -142,6 +143,7 @@ exports.bookinstance_delete_post = function (req, res, next) {
   async.parallel(
     {
       bookInstance: function (callback) {
+        //needs to match
         BookInstance.findById(req.body.bookinstanceid).exec(callback);
       }
     },
@@ -161,7 +163,8 @@ exports.bookinstance_delete_post = function (req, res, next) {
       } else {
         // Author has no books. Delete object and redirect to the list of authors.
         BookInstance.findByIdAndRemove(
-          req.body.bookinstance,
+          //needs to match
+          req.body.bookinstanceid,
           function deleteAuthor(err) {
             if (err) {
               return next(err);
